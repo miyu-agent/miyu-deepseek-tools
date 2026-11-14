@@ -22,8 +22,13 @@ about = { en = "DeepSeek Toolkit: whether the key is set, and OCR a file", zh = 
 
 [process]
 args = ["serve"]
-# tools：登记三件工具；network：连 DeepSeek 的接口、状态页。
-capabilities = ["tools", "network"]
+# tools：登记三件工具；network：连 DeepSeek 的接口、状态页；provider.key：拿人给 DeepSeek 供应商配的 key（握手、推送的
+# config 里那一格 provider_key）。
+capabilities = ["tools", "network", "provider.key"]
+
+# 要哪一家的 key。
+[provider_key]
+catalog = "deepseek"
 
 # 预设里一个开关管三件工具。合成、识别是总线上的方法，不是工具，不在这里。
 [features.deepseek-tools]

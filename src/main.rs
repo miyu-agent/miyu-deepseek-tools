@@ -7,7 +7,7 @@
 //!   （`voice-input`）在配置里挑它就用它；有 DeepSeek 的 key 才登记（[`service`]）。
 //! - 工具 `deepseek_ocr`：把 PDF、Word、PowerPoint、图片传给 DeepSeek 认字，逐页交回（[`ocr`]），DeepSeek 照页收钱。
 //!
-//! key 现在只从测试钩子读，核心交供应商 key 的能力（PK-1）合进来以后改成读核心交的（[`credentials`]）。
+//! key 是核心交的人的 DeepSeek 供应商 key（能力 `provider.key`，PK-1）；测试另有钩子（[`credentials`]）。
 //!
 //! - `miyu-deepseek-tools serve`：核心拉起的扩展。
 //! - `miyu deepseek-tools`：印在跑的扩展有没有 key、怎么用；`miyu deepseek-tools ocr <文件> [--layout]`：经在跑的扩展认一个文件。命令

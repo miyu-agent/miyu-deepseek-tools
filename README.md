@@ -22,12 +22,14 @@ miyu deepseek-tools ocr 海报.png --layout
 
 ## key
 
-现在还读不到你在 Miyu 里配的 DeepSeek key：核心交包用供应商 key 的那一项能力还没合进来，合进来以后这个包改成读它
-（`src/credentials.rs`，全在一处）。在那之前没有 key：合成、识别不接进总线，`deepseek_balance`、`deepseek_ocr` 回「还没有 key」，什么都不发；
+用你在 Miyu 里给 DeepSeek 供应商配的 key：装的时候确认屏会写「这个包会拿到你 DeepSeek 的 key」，点了才给。key 改了、删了，
+核心会推过来，跟着换（`src/credentials.rs`，全在一处）。这个 key 只发到 `https://api.deepseek.com`。
+
+没配 key 时：合成、识别不接进总线，`deepseek_balance`、`deepseek_ocr` 回「还没有 key」，什么都不发；
 `deepseek_status` 不用 key，照样能用。
 
 开发时可以用两个测试钩子：`MIYU_DEEPSEEK_TEST_KEY`（key）、`MIYU_DEEPSEEK_TEST_BASE_URL`（接口地址，不写是
-`https://api.deepseek.com`）。
+`https://api.deepseek.com`）。设了测试 key 的用测试 key；测试地址只跟测试 key 走，改不了你的 key 发去哪儿。
 
 ## 怎么接的
 

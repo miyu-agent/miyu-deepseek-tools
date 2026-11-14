@@ -328,6 +328,28 @@ fn a_config_push_turns_the_plugs_on_and_off() {
 }
 
 #[test]
+fn the_provider_key_pushed_by_the_core_turns_the_plugs_on_and_off() {
+    let (core, _) = start(Box::new(|config| {
+        crate::credentials::credentials_from(config, &|_| None)
+    }));
+    assert!(!registered(&core).contains(&"stt.engine.transcribe".to_string()));
+    core.notify(
+        "extension.config",
+        json!({"keys": {"provider_key": "sk-pushed-by-core"}}),
+    );
+    for method in METHODS {
+        wait_for(&core, method, true);
+    }
+    assert_eq!(call(&core, "info", &json!({})), json!({"key": true}));
+    core.notify("extension.config", json!({"keys": {"provider_key": null}}));
+    for method in METHODS {
+        wait_for(&core, method, false);
+    }
+    assert_eq!(call(&core, "info", &json!({})), json!({"key": false}));
+    core.close().unwrap();
+}
+
+#[test]
 fn the_command_line_s_ocr_method_hands_back_the_text_as_a_blob() {
     let dir = TempDir::new("method");
     let file = dir.0.join("page.jpg");
