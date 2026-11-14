@@ -1,0 +1,40 @@
+# DeepSeek 功能全家桶（包编号 deepseek-tools，仓库、程序叫 miyu-deepseek-tools）：三件工具 deepseek_status（查官方状态页）、
+# deepseek_balance（查账户余额）、deepseek_ocr（文件传给 DeepSeek 认字）；DeepSeek 的语音合成、语音识别接进总线
+# （tts.engine、stt.engine，朗读、语音输入照配置挑它）。
+
+[package]
+version = "0.1.0"
+# 带本机程序：一种系统一个包文件（.github/workflows/release.yml）。
+targets = ["linux-x86_64", "macos-aarch64", "windows-x86_64"]
+protocol = [1, 1]
+name = { en = "DeepSeek Toolkit", zh = "DeepSeek 功能全家桶" }
+summary = { en = "DeepSeek status and text recognition, plus a DeepSeek engine for read-aloud and voice input", zh = "DeepSeek 状态查询、文字识别，还能给朗读、语音输入当 DeepSeek 引擎" }
+author = "SHORiN-KiWATA"
+upstream = "https://github.com/miyu-agent/miyu-deepseek-tools"
+license = "AGPL-3.0-or-later"
+icon = "sparkles"
+
+# 扩展必写：miyu deepseek-tools 印 key 设好没有和用法；miyu deepseek-tools ocr <文件> 经在跑的扩展认一个文件。
+[command]
+name = "deepseek-tools"
+program = "miyu-deepseek-tools"
+about = { en = "DeepSeek Toolkit: whether the key is set, and OCR a file", zh = "DeepSeek 功能全家桶：看 key 设好没有、认一个文件里的字" }
+
+[process]
+args = ["serve"]
+# tools：登记三件工具；network：连 DeepSeek 的接口、状态页。
+capabilities = ["tools", "network"]
+
+# 预设里一个开关管三件工具。合成、识别是总线上的方法，不是工具，不在这里。
+[features.deepseek-tools]
+name = { en = "DeepSeek Toolkit", zh = "DeepSeek 功能全家桶" }
+tools = ["deepseek_status", "deepseek_balance", "deepseek_ocr"]
+
+# 朗读（say）、语音输入（voice-input）照配置挑引擎，挑了这一家才用得上合成、识别；没装照样能用三件工具。
+[recommends]
+packages = ["say", "voice-input"]
+
+# 接进朗读、语音输入的引擎插口（核心 docs/reference/bus.md）：有 DeepSeek 的 key 才登记，bus.list 照登记报 ready。
+[export]
+plugs = ["tts.engine", "stt.engine"]
+methods = ["tts.engine.synthesize", "tts.engine.voices", "stt.engine.transcribe"]

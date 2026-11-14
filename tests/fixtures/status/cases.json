@@ -1,0 +1,250 @@
+{
+ "now_micros": 1794632742123456,
+ "cases": [
+  {
+   "name": "page-md-0",
+   "page": "page.html",
+   "args": {
+    "incidents": 0,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-md-3",
+   "page": "page.html",
+   "args": {
+    "incidents": 3,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-md-20",
+   "page": "page.html",
+   "args": {
+    "incidents": 20,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-json-0",
+   "page": "page.html",
+   "args": {
+    "incidents": 0,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-json-3",
+   "page": "page.html",
+   "args": {
+    "incidents": 3,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-json-20",
+   "page": "page.html",
+   "args": {
+    "incidents": 20,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-md-0",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 0,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-md-3",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 3,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-md-20",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 20,
+    "format": "md"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-json-0",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 0,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-json-3",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 3,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-json-20",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 20,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "page-default",
+   "page": "page.html",
+   "args": {},
+   "exit": 0
+  },
+  {
+   "name": "synthetic-clamped",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": 99
+   },
+   "exit": 0
+  },
+  {
+   "name": "synthetic-negative",
+   "page": "synthetic.html",
+   "args": {
+    "incidents": -4,
+    "format": "json"
+   },
+   "exit": 0
+  },
+  {
+   "name": "nocomp-md",
+   "page": "nocomp.html",
+   "args": {},
+   "exit": 1
+  },
+  {
+   "name": "nocomp-json",
+   "page": "nocomp.html",
+   "args": {
+    "format": "json"
+   },
+   "exit": 1
+  },
+  {
+   "name": "http503-md",
+   "page": "@503",
+   "args": {},
+   "exit": 1
+  },
+  {
+   "name": "http503-json",
+   "page": "@503",
+   "args": {
+    "format": "json",
+    "incidents": 1
+   },
+   "exit": 1
+  },
+  {
+   "name": "unknown-md",
+   "page": "page.html",
+   "args": {
+    "verbose": true,
+    "incidents": 3,
+    "abc": 1
+   },
+   "exit": 1
+  },
+  {
+   "name": "unknown-json",
+   "page": "page.html",
+   "args": {
+    "format": "json",
+    "zzz": 1
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-format",
+   "page": "page.html",
+   "args": {
+    "format": "xml"
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-format-number",
+   "page": "page.html",
+   "args": {
+    "format": 5
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-incidents-string",
+   "page": "page.html",
+   "args": {
+    "incidents": "5"
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-incidents-bool-json",
+   "page": "page.html",
+   "args": {
+    "incidents": true,
+    "format": "json"
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-incidents-float",
+   "page": "page.html",
+   "args": {
+    "incidents": 2.0
+   },
+   "exit": 1
+  },
+  {
+   "name": "bad-incidents-null",
+   "page": "page.html",
+   "args": {
+    "incidents": null
+   },
+   "exit": 1
+  },
+  {
+   "name": "not-an-object",
+   "page": "page.html",
+   "args": [
+    1
+   ],
+   "exit": 1
+  },
+  {
+   "name": "format-null",
+   "page": "page.html",
+   "args": {
+    "format": null,
+    "incidents": 1
+   },
+   "exit": 0
+  }
+ ]
+}

@@ -1,0 +1,30 @@
+DeepSeek 服务状态（2026-11-14 13:05 北京时间，来源 https://status.deepseek.com/）
+全部正常
+
+- DeepSeek V4 Pro API服务(API Service)：正常，30 天可用率 99.74%
+- DeepSeek V4.1 Flash API服务(API Service)：正常，30 天可用率 99.56%
+- 对话服务(Chatservice)：正常，30 天可用率 99.56%
+- 上传文件服务(File Upload Service)：正常，30 天可用率 100%
+- 搜索服务(Search Service)：正常，30 天可用率 99.92%
+- 搜索API服务(Search API Service)：正常，30 天可用率 100%
+- 抓取API服务(Fetch API Service)：正常，30 天可用率 100%
+
+最近 9 起故障：
+- DeepSeek 网页/API 部分中断（DeepSeek Web/API Partially Unavailable）（11-07 15:11，持续 45 分钟，已解决）
+  影响：DeepSeek V4 Pro API服务(API Service)、DeepSeek V4.1 Flash API服务(API Service)、对话服务(Chatservice)、搜索服务(Search Service)
+- DeepSeek 网页/API 部分中断（DeepSeek Web/API Partially Unavailable）（11-03 16:58，持续 1 小时 50 分钟，已解决）
+  影响：DeepSeek V4.1 Flash API服务(API Service)、对话服务(Chatservice)、DeepSeek V4 Pro API服务(API Service)
+- DeepSeek API 性能下降（DeepSeek API Degraded Performance）（10-27 15:07，持续 14 分钟，已解决）
+  影响：DeepSeek V4 Pro API服务(API Service)
+- 搜索服务异常（Search service error）（10-20 17:20，持续 9 分钟，已解决）
+  影响：搜索服务(Search Service)
+- DeepSeek 网页/API 部分中断（DeepSeek Web/API Partially Unavailable）（10-15 08:11，持续 4 小时 52 分钟，已解决）
+  影响：对话服务(Chatservice)、DeepSeek V4.1 Flash API服务(API Service)、DeepSeek V4 Pro API服务(API Service)
+- DeepSeek 网页/API 性能下降（DeepSeek Web/API Degraded Performance）（10-12 14:42，持续 16 分钟，已解决）
+  影响：DeepSeek V4.1 Flash API服务(API Service)、对话服务(Chatservice)
+- - DeepSeek 网页=部分中断（DeepSeek Web Partially Unavailable）（10-12 12:05，持续 12 分钟，已解决）
+  影响：对话服务(Chatservice)
+- DeepSeek 网页/API 性能下降（DeepSeek Web/API Degraded Performance）（10-08 15:04，持续 3 分钟，已解决）
+  影响：对话服务(Chatservice)、DeepSeek V4.1 Flash API服务(API Service)
+- DeepSeek 网页/API 性能下降（DeepSeek Web/API Degraded Performance）（10-02 03:40，持续 1 小时 54 分钟，已解决）
+  影响：DeepSeek V4 Pro API服务(API Service)、对话服务(Chatservice)、DeepSeek V4.1 Flash API服务(API Service)

@@ -1,0 +1,10 @@
+DeepSeek 服务状态（2026-11-14 13:05 北京时间，来源 https://status.deepseek.com/）
+全部正常
+
+- DeepSeek V4 Pro API服务(API Service)：正常，30 天可用率 99.74%
+- DeepSeek V4.1 Flash API服务(API Service)：正常，30 天可用率 99.56%
+- 对话服务(Chatservice)：正常，30 天可用率 99.56%
+- 上传文件服务(File Upload Service)：正常，30 天可用率 100%
+- 搜索服务(Search Service)：正常，30 天可用率 99.92%
+- 搜索API服务(Search API Service)：正常，30 天可用率 100%
+- 抓取API服务(Fetch API Service)：正常，30 天可用率 100%

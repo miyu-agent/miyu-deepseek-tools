@@ -1,0 +1,51 @@
+[workspace]
+resolver = "3"
+members = [".", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[workspace.dependencies]
+# preserve_order：字典照原来的先后（deepseek_status 照 Python 的字典走页面、写 JSON，先后要一样）。
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+unwrap_used = "deny"
+
+[package]
+name = "miyu-deepseek-tools"
+description = "Miyu 的 DeepSeek 功能全家桶：工具 deepseek_status、deepseek_balance、deepseek_ocr，语音合成、语音识别接进总线（tts.engine、stt.engine）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+# 开发包（miyu-sdk 的 Rust 版）：握手、登记工具和方法、一行一条的收发。只走协议，不依赖核心的 crate。钉一个提交，升级改这里。
+miyu-ext = { git = "https://github.com/miyu-agent/miyu-sdk", rev = "05548dcf20cfac0eb506df7a686766ed7db50fd8" }
+serde_json.workspace = true
+# 照 Python 的 json.dumps 的样子写 JSON（src/status/py.rs 的 PythonJson）要 serde 的 Serialize。
+serde = "1"
+# 连 DeepSeek：纯 Rust 的 HTTPS（rustls），走系统的代理设置。multipart 自己拼（ureq 的 multipart 还没定版，见 src/multipart.rs）。
+ureq = "3.5.1"
+# blob 的内容经核心传，是 base64（src/blobs.rs）。
+base64 = "0.22"
+
+[lints]
+workspace = true
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
