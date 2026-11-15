@@ -63,11 +63,7 @@ impl FakeDeepSeek {
                 let Ok((stream, _)) = listener.accept() else {
                     return;
                 };
-                if let Some(request) = serve(stream, &answer) {
-                    log.lock()
-                        .unwrap_or_else(PoisonError::into_inner)
-                        .push(request);
-                }
+                serve(stream, &answer, &log);
             }
         });
         FakeDeepSeek { base, received }
@@ -82,8 +78,9 @@ impl FakeDeepSeek {
     }
 }
 
-/// 读一个请求，答上，关掉连接。
-fn serve(stream: TcpStream, answer: &Answer) -> Option<Received> {
+/// 读一个请求，记进 `log`，再答上、关掉连接。先记后答：客户端拿到回答时这个请求一定已经记下了，测试接着读
+/// [`FakeDeepSeek::received`] 不会扑空（以前答完才记，macOS 上偶尔读到空的）。
+fn serve(stream: TcpStream, answer: &Answer, log: &Mutex<Vec<Received>>) -> Option<()> {
     stream
         .set_read_timeout(Some(Duration::from_secs(10)))
         .ok()?;
@@ -119,6 +116,14 @@ fn serve(stream: TcpStream, answer: &Answer) -> Option<Received> {
     } else {
         Vec::new()
     };
+    log.lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .push(Received {
+            method,
+            path,
+            headers,
+            body,
+        });
     let mut stream = stream;
     let head = format!(
         "HTTP/1.1 {} Fake\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
@@ -128,13 +133,7 @@ fn serve(stream: TcpStream, answer: &Answer) -> Option<Received> {
     );
     stream.write_all(head.as_bytes()).ok()?;
     stream.write_all(&answer.body).ok()?;
-    stream.flush().ok()?;
-    Some(Received {
-        method,
-        path,
-        headers,
-        body,
-    })
+    stream.flush().ok()
 }
 
 /// 读分块传的请求体。
