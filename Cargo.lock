@@ -171,7 +171,7 @@ dependencies = [
 [[package]]
 name = "miyu-ext"
 version = "0.1.0"
-source = "git+https://github.com/miyu-agent/miyu-sdk?rev=05548dcf20cfac0eb506df7a686766ed7db50fd8#05548dcf20cfac0eb506df7a686766ed7db50fd8"
+source = "git+https://github.com/miyu-agent/miyu-sdk?rev=dee65a91f1650a8eb1d2dc2ac330b4bb21926099#dee65a91f1650a8eb1d2dc2ac330b4bb21926099"
 dependencies = [
  "serde_json",
 ]
