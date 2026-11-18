@@ -6,9 +6,9 @@ Miyu 的扩展包：把 [DeepSeek 的接口](https://api-docs.deepseek.com) 和�
   近 30 天可用率，正在处理的和最近的故障。不用 key。照 miyu-scripts 的 `deepseek-status` 脚本搬成 Rust，参数、输出一样，
   Windows 上不用装 Python。
 - **余额查询**：工具 `deepseek_balance`，查 DeepSeek 账户能不能调接口、每种货币的总余额、赠送的、充值的。
-- **语音合成**接进总线的 `tts.engine`：朗读（`say`）的配置里「引擎」选「社区引擎」、包选 `deepseek-tools`，就用它念。两个音色：`stella`（海星，女声，默认）、
+- **语音合成**接进总线的 `tts.engine`：朗读（`say`）的配置里「引擎」选「DeepSeek 功能全家桶」，就用它念。两个音色：`stella`（海星，女声，默认）、
   `tide`（暗潮，男声）。
-- **语音识别**接进总线的 `stt.engine`：语音输入（`voice-input`）的配置里「引擎」选 `deepseek-tools`，就用它听写，不用下本机 163 MB 的模型。
+- **语音识别**接进总线的 `stt.engine`：语音输入（`voice-input`）的配置里「引擎」选「DeepSeek 功能全家桶」，就用它听写，不用下本机 163 MB 的模型。
 - **文字识别**：工具 `deepseek_ocr`，认 PDF、Word（DOC、DOCX）、PowerPoint（PPT、PPTX）、图片里的字，逐页交回。
 
 ```sh
