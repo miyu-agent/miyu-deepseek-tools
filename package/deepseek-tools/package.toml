@@ -1,45 +1,45 @@
-# DeepSeek 功能全家桶（包编号 deepseek-tools，仓库、程序叫 miyu-deepseek-tools）：三件工具 deepseek_status（查官方状态页）、
-# deepseek_balance（查账户余额）、deepseek_ocr（文件传给 DeepSeek 认字）；DeepSeek 的语音合成、语音识别接进总线
-# （tts.engine、stt.engine，朗读、语音输入照配置挑它）。
+# DeepSeek 功能全家桶。包编号是 deepseek-tools，仓库和程序叫 miyu-deepseek-tools。
+# 这个包提供三件工具：deepseek_status 查看官方状态页，deepseek_balance 查看账户余额，deepseek_ocr 把文件传给 DeepSeek 识别文字。
+# 它还把 DeepSeek 的语音合成和语音识别接进总线（tts.engine、stt.engine），朗读和语音输入在设置里选中它之后就会使用。
 
 [package]
 version = "0.1.0"
-# 带本机程序：一种系统一个包文件（.github/workflows/release.yml）。
+# 这个包带有本机程序，所以每种系统各打一个包文件（见 .github/workflows/release.yml）。
 targets = ["linux-x86_64", "macos-aarch64", "windows-x86_64"]
 protocol = [1, 1]
 name = { en = "DeepSeek Toolkit", zh = "DeepSeek 功能全家桶" }
-summary = { en = "DeepSeek status and text recognition, plus a DeepSeek engine for read-aloud and voice input", zh = "DeepSeek 状态查询、文字识别，还能给朗读、语音输入当 DeepSeek 引擎" }
+summary = { en = "DeepSeek status and text recognition; it can also be the engine for read-aloud and voice input", zh = "DeepSeek 状态查询和文字识别，也可以作为朗读和语音输入的引擎" }
 author = "SHORiN-KiWATA"
 upstream = "https://github.com/miyu-agent/miyu-deepseek-tools"
 license = "AGPL-3.0-or-later"
 icon = "sparkles"
 
-# 扩展必写：miyu deepseek-tools 印 key 设好没有和用法；miyu deepseek-tools ocr <文件> 经在跑的扩展认一个文件。
+# 扩展必须提供命令。`miyu deepseek-tools` 显示 key 是否已经设置和用法；`miyu deepseek-tools ocr <文件>` 通过正在运行的扩展识别一个文件。
 [command]
 name = "deepseek-tools"
 program = "miyu-deepseek-tools"
-about = { en = "DeepSeek Toolkit: whether the key is set, and OCR a file", zh = "DeepSeek 功能全家桶：看 key 设好没有、认一个文件里的字" }
+about = { en = "DeepSeek Toolkit: check whether the key is set, and recognize the text in a file", zh = "DeepSeek 功能全家桶：查看 key 是否已经设置，识别一个文件里的文字" }
 
 [process]
 args = ["serve"]
-# tools：登记三件工具；network：连 DeepSeek 的接口、状态页；provider.key：拿人给 DeepSeek 供应商配的 key（握手、推送的
-# config 里那一格 provider_key）。
+# tools 用来登记三件工具；network 用来连接 DeepSeek 的接口和状态页；provider.key 用来取得你为 DeepSeek 供应商配置的 key
+# （它在握手和配置推送里的 provider_key 一格）。
 capabilities = ["tools", "network", "provider.key"]
 
-# 要哪一家的 key。
+# 需要哪一家供应商的 key。
 [provider_key]
 catalog = "deepseek"
 
-# 预设里一个开关管三件工具。合成、识别是总线上的方法，不是工具，不在这里。
+# 预设里用一个开关控制三件工具。语音合成和语音识别是总线上的方法，不是工具，所以不列在这里。
 [features.deepseek-tools]
 name = { en = "DeepSeek Toolkit", zh = "DeepSeek 功能全家桶" }
 tools = ["deepseek_status", "deepseek_balance", "deepseek_ocr"]
 
-# 朗读（say）、语音输入（voice-input）照配置挑引擎，挑了这一家才用得上合成、识别；没装照样能用三件工具。
+# 朗读（say）和语音输入（voice-input）在设置里选中这个包作为引擎之后，才会用到语音合成和语音识别。没有安装它们时，三件工具也可以正常使用。
 [recommends]
 packages = ["say", "voice-input"]
 
-# 接进朗读、语音输入的引擎插口（核心 docs/reference/bus.md）：有 DeepSeek 的 key 才登记，bus.list 照登记报 ready。
+# 接进朗读和语音输入的引擎插口（见核心的 docs/reference/bus.md）。只有在有 DeepSeek 的 key 时才登记，bus.list 根据是否登记报告 ready。
 [export]
 plugs = ["tts.engine", "stt.engine"]
 methods = ["tts.engine.synthesize", "tts.engine.voices", "stt.engine.transcribe"]

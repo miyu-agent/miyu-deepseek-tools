@@ -1,60 +1,57 @@
 # DeepSeek 功能全家桶（deepseek-tools）
 
-Miyu 的扩展包：把 [DeepSeek 的接口](https://api-docs.deepseek.com) 和状态页接进 Miyu。
+DeepSeek 功能全家桶是 Miyu 的扩展包，它把 [DeepSeek 的接口](https://api-docs.deepseek.com)和 DeepSeek 的状态页接进 Miyu。安装之后，你可以使用下面这些功能：
 
-- **状态查询**：AI 用的工具 `deepseek_status`，查 DeepSeek 官方状态页（<https://status.deepseek.com/>）：各项服务现在好不好、
-  近 30 天可用率，正在处理的和最近的故障。不用 key。照 miyu-scripts 的 `deepseek-status` 脚本搬成 Rust，参数、输出一样，
-  Windows 上不用装 Python。
-- **余额查询**：工具 `deepseek_balance`，查 DeepSeek 账户能不能调接口、每种货币的总余额、赠送的、充值的。
-- **语音合成**接进总线的 `tts.engine`：朗读（`say`）的配置里「引擎」选「DeepSeek 功能全家桶」，就用它念。两个音色：`stella`（海星，女声，默认）、
-  `tide`（暗潮，男声）。
-- **语音识别**接进总线的 `stt.engine`：语音输入（`voice-input`）的配置里「引擎」选「DeepSeek 功能全家桶」，就用它听写，不用下本机 163 MB 的模型。
-- **文字识别**：工具 `deepseek_ocr`，认 PDF、Word（DOC、DOCX）、PowerPoint（PPT、PPTX）、图片里的字，逐页交回。
+- **状态查询**：AI 可以用工具 `deepseek_status` 查看 DeepSeek 官方状态页（<https://status.deepseek.com/>），了解各项服务现在是否正常、近 30 天的可用率，以及正在处理和最近发生的故障。这个功能不需要 key。由于它是用 Rust 写的，Windows 上也不需要安装 Python。
+- **余额查询**：AI 可以用工具 `deepseek_balance` 查看你的 DeepSeek 账户能否调用接口，以及每种货币的总余额、赠送余额和充值余额。
+- **语音合成**：这个包可以作为朗读（`say`）的引擎。在朗读的设置里把 `引擎` 选为 `DeepSeek 功能全家桶`，朗读就会使用 DeepSeek 的语音合成。可以选择两个音色：`stella`（海星，女声，默认）和 `tide`（暗潮，男声）。
+- **语音识别**：这个包可以作为语音输入（`voice-input`）的引擎。在语音输入的设置里把 `引擎` 选为 `DeepSeek 功能全家桶`，语音输入就会使用 DeepSeek 的语音识别，因此不需要下载本机 163 MB 的识别模型。
+- **文字识别（OCR）**：AI 可以用工具 `deepseek_ocr` 识别 PDF、Word（DOC、DOCX）、PowerPoint（PPT、PPTX）和图片里的文字，结果按页返回。
+
+安装和使用：
 
 ```sh
 miyu pkg install deepseek-tools
-miyu deepseek-tools               # 看 key 有没有、怎么用
-miyu deepseek-tools ocr 合同.pdf   # 在命令行认一个文件
+miyu deepseek-tools               # 查看 key 是否已经设置，以及用法
+miyu deepseek-tools ocr 合同.pdf   # 在命令行识别一个文件里的文字
 miyu deepseek-tools ocr 海报.png --layout
 ```
 
-**文件、声音都会传到 DeepSeek**，照 DeepSeek 的价钱收钱：合成照字数，识别照时长，OCR 照页数（认出来的头一行会写几页）。
+> **你的文件和声音会上传到 DeepSeek，并且按 DeepSeek 的价格收费。** 语音合成按字数收费，语音识别按时长收费，文字识别按页数收费。文字识别结果的第一行会写明一共识别了几页。
 
-## key
+## 设置 key
 
-用你在 Miyu 里给 DeepSeek 供应商配的 key：装的时候确认屏会写「这个包会拿到你 DeepSeek 的 key」，点了才给。key 改了、删了，
-核心会推过来，跟着换（`src/credentials.rs`，全在一处）。这个 key 只发到 `https://api.deepseek.com`。
+这个包使用你在 Miyu 里为 DeepSeek 模型供应商配置的 key。安装时，确认界面会显示 `这个包会拿到你 DeepSeek 的 key`，你确认之后包才会拿到 key。如果你之后修改或删除了这个 key，核心会把变化推送给这个包，包会随之更换。这个 key 只会发送到 `https://api.deepseek.com`。
 
-没配 key 时：合成、识别不接进总线，`deepseek_balance`、`deepseek_ocr` 回「还没有 key」，什么都不发；
-`deepseek_status` 不用 key，照样能用。
+如果还没有配置 key：
 
-开发时可以用两个测试钩子：`MIYU_DEEPSEEK_TEST_KEY`（key）、`MIYU_DEEPSEEK_TEST_BASE_URL`（接口地址，不写是
-`https://api.deepseek.com`）。设了测试 key 的用测试 key；测试地址只跟测试 key 走，改不了你的 key 发去哪儿。
+- 语音合成和语音识别无法使用。朗读和语音输入的引擎选项里仍然会列出 `DeepSeek 功能全家桶`，但是会标注 `没在运行`；
+- `deepseek_balance` 和 `deepseek_ocr` 会回复 `No DeepSeek key yet…`，不会发出任何请求；
+- `deepseek_status` 不需要 key，可以照常使用。
 
-## 怎么接的
+> 开发时可以使用两个测试用的环境变量：`MIYU_DEEPSEEK_TEST_KEY` 设置 key，`MIYU_DEEPSEEK_TEST_BASE_URL` 设置接口地址（没有设置时是 `https://api.deepseek.com`）。设置了测试 key 时，包会优先使用测试 key。测试地址只对测试 key 生效，因此它不能改变你自己的 key 的发送地址。
 
-- 合成：`POST /v1/tools/tts`，要 WAV。DeepSeek 只出 WAV 和裸 PCM，朗读要 MP3 时也交 WAV、写实 `audio/wav`；不能调语速，
-  `speed` 收下不用。音频边合成边发，头里的长度交出去之前重写；中途断了的当失败。
-- 识别：`POST /v1/tools/asr`，multipart 的 `file`。DeepSeek 一次至多 8 MiB、120 秒，长过 110 秒的录音按帧切成几段，一段段识别，
-  字接起来。
-- OCR：`POST /v1/tools/ocr`，multipart 的 `purpose`、`file`；至多 100 MiB，传之前先看大小，文件边读边发，传的时候变短了的当失败。认的字里带着定位记号
-  （`<｜ref｜>`、`<｜box｜>` 和坐标），给 AI 看的去掉，原样的回答留在 `data` 里给脚本。命令行用的方法 `ocr` 只给人敲的命令，
-  别的包调不到。
-- 余额：`GET /user/balance`（不在 `/v1` 底下），原样的回答在 `data` 里。
-- 状态页：取 <https://status.deepseek.com/> 那一页，从 Next.js 的数据段里读服务、可用率、故障。`tests/fixtures/status/` 里是一份真的页面和
-  原来的 Python 脚本对它的输出，测试照着对答案，一字不差。
-- 出错照 DeepSeek 文档的状态码说一句英文，带上 DeepSeek 自己的原话；key 只在请求头里，报错、日志里不出现。
-- 连接走系统的代理设置（`HTTPS_PROXY`、`NO_PROXY`）。
+## 实现方式
+
+这一节写给想了解或修改这个包的开发者。
+
+- **语音合成**：调用 `POST /v1/tools/tts`，请求 WAV 格式。因为 DeepSeek 只提供 WAV 和裸 PCM 两种格式，所以朗读要求 MP3 时，这个包也交回 WAV，并如实标明 `audio/wav`。DeepSeek 不支持调整语速，因此收到的 `speed` 参数不起作用。音频边合成边接收，交出之前会重写 WAV 头里的长度；如果传输中途断开，这次合成按失败处理。
+- **语音识别**：调用 `POST /v1/tools/asr`，用 multipart 的 `file` 字段上传。DeepSeek 一次最多接受 8 MiB、120 秒的音频，所以长于 110 秒的录音会按音频帧切成几段，逐段识别后再把文字连起来。
+- **文字识别**：调用 `POST /v1/tools/ocr`，用 multipart 的 `purpose` 和 `file` 字段上传。文件最大 100 MiB，包会在上传之前先检查大小，上传时边读边发；如果文件在上传过程中变短，这次识别按失败处理。DeepSeek 返回的文字里带有定位记号（`<｜ref｜>`、`<｜box｜>` 和坐标），交给 AI 的文字会去掉这些记号，原始回答完整保留在 `data` 里供脚本使用。命令行使用的方法 `ocr` 只接受你在终端里运行的命令，其他扩展包不能调用它。
+- **余额查询**：调用 `GET /user/balance`（这个地址不在 `/v1` 下面），原始回答保留在 `data` 里。
+- **状态查询**：读取 <https://status.deepseek.com/> 页面，从页面里 Next.js 的数据段解析服务状态、可用率和故障。`tests/fixtures/status/` 里保存了一份真实的页面和对应的标准输出，测试会逐字核对。
+- **报错**：出错时，包会根据 DeepSeek 文档里的状态码给出一句英文说明，并附上 DeepSeek 返回的原文。key 只放在请求头里，不会出现在报错和日志中。
+- **代理**：网络连接使用系统的代理设置（`HTTPS_PROXY`、`NO_PROXY`）。
 
 ## 开发
 
 ```sh
-cargo test --workspace   # 不连真的 DeepSeek：测试在本机起一个假的
-cargo xtask licenses     # 第三方许可证合不合、THIRD-PARTY-LICENSES.txt 是不是最新的
-cargo xtask notices      # 升级依赖以后重新生成清单
+cargo test --workspace   # 测试会在本机启动一个假的 DeepSeek 服务，不连接真实的 DeepSeek
+cargo xtask licenses     # 检查第三方许可证是否兼容，以及 THIRD-PARTY-LICENSES.txt 是否是最新的
+cargo xtask notices      # 升级依赖之后重新生成许可证清单
 ```
 
-打标签 `v<版本>` 发版：三种系统各打一个 `.miyu`（`.github/workflows/release.yml`）。
+发版时打标签 `v<版本号>`，CI 会为三种系统各打一个 `.miyu` 包（见 `.github/workflows/release.yml`）。
 
 ## 许可证
 
