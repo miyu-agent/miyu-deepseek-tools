@@ -110,3 +110,43 @@ fn splitting_cuts_on_frames_and_every_piece_is_a_valid_wav() {
     assert_eq!(durations, [2000, 2000, 1000]);
     assert_eq!(joined, data, "切开再接上一字不差");
 }
+
+/// `WAVE_FORMAT_EXTENSIBLE` 的 `fmt ` 块，子格式的头两个字节是 `sub`（1 是 PCM，3 是浮点）。
+fn extensible_fmt(sub: u16) -> Vec<u8> {
+    let mut fmt = pcm_fmt(1, 16_000);
+    fmt[..2].copy_from_slice(&0xFFFEu16.to_le_bytes());
+    fmt.extend_from_slice(&22u16.to_le_bytes()); // cbSize
+    fmt.extend_from_slice(&16u16.to_le_bytes()); // 有效位数
+    fmt.extend_from_slice(&4u32.to_le_bytes()); // 声道位置
+    fmt.extend_from_slice(&sub.to_le_bytes());
+    fmt.extend_from_slice(b"\x00\x00\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71");
+    fmt
+}
+
+#[test]
+fn only_pcm_is_taken() {
+    let mut float = pcm_fmt(1, 16_000);
+    float[..2].copy_from_slice(&3u16.to_le_bytes());
+    let mut alaw = pcm_fmt(1, 16_000);
+    alaw[..2].copy_from_slice(&6u16.to_le_bytes());
+    for (what, fmt) in [
+        ("float", float),
+        ("a-law", alaw),
+        ("extensible float", extensible_fmt(3)),
+    ] {
+        let wav = encode(&fmt, b"abcd");
+        let got = parse(&wav);
+        assert!(
+            got.as_ref().is_err_and(|why| why.contains("not PCM")),
+            "{what}: {got:?}"
+        );
+    }
+    let wav = encode(&extensible_fmt(1), b"abcd");
+    let read = parse(&wav).unwrap();
+    assert_eq!((read.channels, read.bits, read.data.len()), (1, 16, 4));
+    let short = extensible_fmt(1)[..18].to_vec();
+    assert!(
+        parse(&encode(&short, b"abcd")).is_err(),
+        "EXTENSIBLE 不够 40 个字节"
+    );
+}

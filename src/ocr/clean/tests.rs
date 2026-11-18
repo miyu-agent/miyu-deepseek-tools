@@ -37,3 +37,42 @@ fn plain_text_is_only_tidied() {
     assert_eq!(clean("\n\n第一行  \n\n\n\n第二行\n"), "第一行\n\n第二行");
     assert_eq!(clean(""), "");
 }
+
+#[test]
+fn a_lowercase_word_in_a_ref_without_coordinates_stays() {
+    assert_eq!(
+        clean("<｜ref｜>abstract<｜/ref｜>\nThis paper introduces..."),
+        "abstract\nThis paper introduces..."
+    );
+    assert_eq!(clean("<｜ref｜>foo_bar<｜/ref｜>"), "foo_bar");
+}
+
+#[test]
+fn on_a_page_whose_refs_hold_text_a_lowercase_heading_stays() {
+    // DeepSeek 文档的写法：ref 里是那块的字，后面跟坐标。有一处 ref 里是正文的，这一页的 ref 都是正文。
+    let raw = "<｜ref｜>Title<｜/ref｜><｜box｜>[[52, 40, 948, 96]]<｜/box｜>\n\
+<｜ref｜>abstract<｜/ref｜><｜box｜>[[52, 100, 948, 120]]<｜/box｜>\n\
+<｜ref｜>This paper introduces a method.<｜/ref｜><｜box｜>[[52, 130, 948, 300]]<｜/box｜>";
+    assert_eq!(
+        clean(raw),
+        "Title\nabstract\nThis paper introduces a method."
+    );
+}
+
+#[test]
+fn coordinates_nested_inside_a_ref_never_show() {
+    assert_eq!(
+        clean("<｜ref｜>Hello<｜box｜>[[10, 20, 30, 40]]<｜/box｜><｜/ref｜>"),
+        "Hello"
+    );
+    assert_eq!(
+        clean("<|ref|>title<|det|>[[1, 2, 3, 4]]<|/det|><|/ref|>\n# Report"),
+        "# Report",
+        "版面类别里套着坐标的也算版面标注"
+    );
+    assert_eq!(
+        clean("<｜ref｜>Hi<｜box｜>[[1<｜/ref｜> there"),
+        "Hi[[1 there",
+        "ref 里没收尾的 box 只去记号，不吃掉 ref 的收尾"
+    );
+}

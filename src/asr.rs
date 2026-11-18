@@ -23,7 +23,7 @@ pub struct Piece {
 ///
 /// # Errors
 ///
-/// 不是 WAV（也不是 Ogg）、不是 16 位、没有声音、Ogg 太大：一句英文（[`crate::service`] 报 `bad_audio`）。
+/// 不是 WAV（也不是 Ogg）、不是 PCM、不是 16 位、没有声音、Ogg 太大、`fmt ` 块大到一段放不下：一句英文（[`crate::service`] 报 `bad_audio`）。
 pub fn pieces(audio: &[u8]) -> Result<Vec<Piece>, String> {
     if audio.starts_with(b"OggS") {
         if audio.len() > PIECE_BYTES {
@@ -49,7 +49,15 @@ pub fn pieces(audio: &[u8]) -> Result<Vec<Piece>, String> {
     }
     let by_time =
         usize::try_from(u64::from(wav.rate) * u64::from(PIECE_SECONDS)).unwrap_or(usize::MAX);
-    let by_size = (PIECE_BYTES - 44 - wav.fmt.len()) / usize::from(wav.block_align);
+    // 一段要放下头和 `fmt ` 块，再放至少一帧：`fmt ` 块大到放不下的不切（照抄进每段，段段超 8 MiB）。
+    let by_size = (PIECE_BYTES.checked_sub(44 + wav.fmt.len()))
+        .map_or(0, |room| room / usize::from(wav.block_align));
+    if by_size == 0 {
+        return Err(format!(
+            "The WAV format block is {} bytes, too big to send to DeepSeek.",
+            wav.fmt.len()
+        ));
+    }
     Ok(wav
         .split(by_time.min(by_size))
         .into_iter()

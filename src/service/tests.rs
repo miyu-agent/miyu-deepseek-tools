@@ -376,3 +376,24 @@ fn the_command_line_s_ocr_method_hands_back_the_text_as_a_blob() {
     assert_eq!(server.received().len(), 1);
     core.close().unwrap();
 }
+
+#[test]
+fn another_package_cannot_have_the_ocr_method_upload_a_file() {
+    let dir = TempDir::new("from");
+    let file = dir.0.join("secret.txt");
+    std::fs::write(&file, b"not for upload").unwrap();
+    let server = FakeDeepSeek::start(vec![Answer::new(
+        200,
+        "application/json",
+        ocr_answer("leaked").to_string(),
+    )]);
+    let (core, _) = start_with_key(&server.base);
+    // 核心转别的包的 package.call 时带上 `from`（调的包的编号）；人的头调的没有。
+    let got = core.request(
+        "method.call",
+        json!({"method": "ocr", "params": {"path": file}, "from": "im"}),
+    );
+    assert_eq!(got["error"]["data"]["code"], "not_allowed", "{got}");
+    assert!(server.received().is_empty(), "nothing was uploaded");
+    core.close().unwrap();
+}

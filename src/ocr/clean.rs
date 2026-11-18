@@ -3,9 +3,10 @@
 //! DeepSeek 文档的例子：`<｜ref｜>Title<｜/ref｜><｜box｜>[[52, 40, 948, 96]]<｜/box｜>`，`ref` 里是那块的字，`box` 里是坐标。
 //! 照 DeepSeek-OCR 模型的写法也认 `<｜det｜>…<｜/det｜>`（坐标）和半角的 `<|ref|>`。去法：
 //!
-//! - `box`、`det` 连同里面的坐标整个去掉；
-//! - `ref` 去掉记号、留下里面的字；只有一种例外：它单独占一行、里面是小写的类别名（`title`、`text`、`image` 这种 DeepSeek-OCR
-//!   的版面类别），真正的字在下一行，这一行整个去掉；
+//! - `box`、`det` 连同里面的坐标整个去掉，套在 `ref` 里面的也一样；
+//! - `ref` 去掉记号、留下里面的字；只有一种例外：DeepSeek-OCR 模型的版面写法，`ref` 里是小写的类别名（`title`、`text`、
+//!   `image` 这种），紧跟着坐标、单独占一行，真正的字在下一行，这一行整个去掉。要三样都对上：这一页每个 `ref` 里都是小写的
+//!   类别名（有一处是正文的，是文档的写法，这一页的 `ref` 都当正文），这个 `ref` 带着坐标，单独占一行；
 //! - 别的 `<｜名字｜>` 记号去掉。不像记号的 `<`、`|` 照原样。
 //!
 //! 最后每行去掉行尾空白，连着的空行并成一行。
@@ -20,6 +21,7 @@ enum Piece<'a> {
 /// 去掉记号。
 pub fn clean(raw: &str) -> String {
     let pieces = split(raw);
+    let layout = layout_page(&pieces);
     let mut out = String::new();
     let mut eat_newline = false;
     let mut at = 0;
@@ -39,31 +41,67 @@ pub fn clean(raw: &str) -> String {
                 at += 1;
             }
             Piece::Token("ref") => {
-                let mut inside = String::new();
-                at += 1;
-                while let Some(piece) = pieces.get(at) {
-                    at += 1;
-                    match piece {
-                        Piece::Token("/ref") => break,
-                        Piece::Text(text) => inside.push_str(text),
-                        Piece::Token(_) => {}
-                    }
+                let (inside, mut next, mut located) = reference(&pieces, at + 1);
+                while matches!(pieces.get(next), Some(Piece::Token("box" | "det"))) {
+                    next = past_region(&pieces, next, pieces.len());
+                    located = true;
                 }
-                while matches!(pieces.get(at), Some(Piece::Token("box" | "det"))) {
-                    at = past_region(&pieces, at);
-                }
-                if starts_line(&out) && ends_line(pieces.get(at)) && is_label(&inside) {
+                at = next;
+                if layout && located && starts_line(&out) && ends_line(pieces.get(at)) {
                     out.truncate(out.trim_end_matches([' ', '\t']).len());
                     eat_newline = true;
                 } else {
                     out.push_str(&inside);
                 }
             }
-            Piece::Token("box" | "det") => at = past_region(&pieces, at),
+            Piece::Token("box" | "det") => at = past_region(&pieces, at, pieces.len()),
             Piece::Token(_) => at += 1,
         }
     }
     tidy(&out)
+}
+
+/// 从 `from`（`ref` 记号后面）读到 `/ref`：交回里面的字、`/ref` 后面在哪、里面套没套着坐标。套着的 `box`、`det` 连坐标
+/// 去掉，收尾只在这个 `ref` 里面找；没有 `/ref` 的读到最后。
+fn reference(pieces: &[Piece<'_>], from: usize) -> (String, usize, bool) {
+    let end = pieces[from.min(pieces.len())..]
+        .iter()
+        .position(|piece| *piece == Piece::Token("/ref"))
+        .map_or(pieces.len(), |offset| from + offset);
+    let mut inside = String::new();
+    let mut located = false;
+    let mut at = from;
+    while at < end {
+        match pieces[at] {
+            Piece::Text(text) => {
+                inside.push_str(text);
+                at += 1;
+            }
+            Piece::Token("box" | "det") => {
+                at = past_region(pieces, at, end);
+                located = true;
+            }
+            Piece::Token(_) => at += 1,
+        }
+    }
+    (inside, (end + 1).min(pieces.len()), located)
+}
+
+/// 这一页是不是 DeepSeek-OCR 的版面写法：每个 `ref` 里都是小写的类别名。
+fn layout_page(pieces: &[Piece<'_>]) -> bool {
+    let mut at = 0;
+    while at < pieces.len() {
+        if pieces[at] == Piece::Token("ref") {
+            let (inside, next, _) = reference(pieces, at + 1);
+            if !is_label(&inside) {
+                return false;
+            }
+            at = next;
+        } else {
+            at += 1;
+        }
+    }
+    true
 }
 
 /// 切成字和记号。
@@ -113,13 +151,13 @@ fn token(s: &str) -> Option<(&str, usize)> {
     Some((name, opened + bar + closing.len()))
 }
 
-/// 从 `at`（一个 `box`、`det`）跳到它收尾的记号后面；没收尾的只跳过这一个记号。
-fn past_region(pieces: &[Piece<'_>], at: usize) -> usize {
+/// 从 `at`（一个 `box`、`det`）跳到它收尾的记号后面，收尾只在 `limit` 以前找；没收尾的只跳过这一个记号。
+fn past_region(pieces: &[Piece<'_>], at: usize, limit: usize) -> usize {
     let Some(Piece::Token(name)) = pieces.get(at) else {
         return at + 1;
     };
     let close = format!("/{name}");
-    pieces[at + 1..]
+    pieces[at + 1..limit.max(at + 1)]
         .iter()
         .position(|piece| *piece == Piece::Token(&close))
         .map_or(at + 1, |offset| at + 1 + offset + 1)

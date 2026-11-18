@@ -53,7 +53,7 @@ impl Wav<'_> {
 ///
 /// # Errors
 ///
-/// 不是 RIFF/WAVE、没有 `fmt `、`data` 块，`fmt ` 太短，声道、采样率、帧长是 0：一句英文。
+/// 不是 RIFF/WAVE、没有 `fmt `、`data` 块，`fmt ` 太短，不是 PCM，声道、采样率、帧长是 0：一句英文。
 pub fn parse(bytes: &[u8]) -> Result<Wav<'_>, String> {
     if bytes.len() < 12 || &bytes[..4] != b"RIFF" || &bytes[8..12] != b"WAVE" {
         return Err("It is not a WAV file.".to_string());
@@ -100,6 +100,12 @@ fn described<'a>(fmt: &'a [u8], data: &'a [u8], cut_off: bool) -> Result<Wav<'a>
         return Err("The WAV format block is too short.".to_string());
     }
     let u16_at = |at: usize| u16::from_le_bytes([fmt[at], fmt[at + 1]]);
+    if !is_pcm(fmt) {
+        return Err(format!(
+            "The WAV audio is not PCM (format tag {:#06x}).",
+            u16_at(0)
+        ));
+    }
     let channels = u16_at(2);
     let rate = u32::from_le_bytes([fmt[4], fmt[5], fmt[6], fmt[7]]);
     let block_align = u16_at(12);
@@ -117,6 +123,20 @@ fn described<'a>(fmt: &'a [u8], data: &'a [u8], cut_off: bool) -> Result<Wav<'a>
         data: &data[..whole],
         cut_off,
     })
+}
+
+/// 是不是 PCM：格式标签 1，或者 `0xFFFE`（`WAVE_FORMAT_EXTENSIBLE`）且子格式是 PCM（`fmt ` 块第 24 到 40 个字节，
+/// `00000001-0000-0010-8000-00aa00389b71`）。DeepSeek 识别收 16 位 PCM 的 WAV，别的编码切出来也是乱的。
+fn is_pcm(fmt: &[u8]) -> bool {
+    const PCM_SUBFORMAT: [u8; 16] = [
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b,
+        0x71,
+    ];
+    match u16::from_le_bytes([fmt[0], fmt[1]]) {
+        1 => true,
+        0xFFFE => fmt.get(24..40) == Some(&PCM_SUBFORMAT[..]),
+        _ => false,
+    }
 }
 
 /// 拼一个 WAV：`RIFF` 头、`fmt ` 块（`fmt` 照抄）、`data` 块，长度都写实，奇数长的块后面补一个字节。

@@ -37,8 +37,9 @@ miyu deepseek-tools ocr 海报.png --layout
   `speed` 收下不用。音频边合成边发，头里的长度交出去之前重写；中途断了的当失败。
 - 识别：`POST /v1/tools/asr`，multipart 的 `file`。DeepSeek 一次至多 8 MiB、120 秒，长过 110 秒的录音按帧切成几段，一段段识别，
   字接起来。
-- OCR：`POST /v1/tools/ocr`，multipart 的 `purpose`、`file`；至多 100 MiB，传之前先看大小，文件边读边发。认的字里带着定位记号
-  （`<｜ref｜>`、`<｜box｜>` 和坐标），给 AI 看的去掉，原样的回答留在 `data` 里给脚本。
+- OCR：`POST /v1/tools/ocr`，multipart 的 `purpose`、`file`；至多 100 MiB，传之前先看大小，文件边读边发，传的时候变短了的当失败。认的字里带着定位记号
+  （`<｜ref｜>`、`<｜box｜>` 和坐标），给 AI 看的去掉，原样的回答留在 `data` 里给脚本。命令行用的方法 `ocr` 只给人敲的命令，
+  别的包调不到。
 - 余额：`GET /user/balance`（不在 `/v1` 底下），原样的回答在 `data` 里。
 - 状态页：取 <https://status.deepseek.com/> 那一页，从 Next.js 的数据段里读服务、可用率、故障。`tests/fixtures/status/` 里是一份真的页面和
   原来的 Python 脚本对它的输出，测试照着对答案，一字不差。

@@ -1,7 +1,7 @@
 //! OCR：一个文件（PDF、Word、PowerPoint、图片）传给 DeepSeek 的 `POST /v1/tools/ocr`（multipart：`purpose`、`file`），逐页
 //! 拿回字。DeepSeek 照页数收钱，文件离开这台电脑。
 //!
-//! - 至多 100 MiB，传之前先看大小；文件边读边发，不整个读进内存。
+//! - 至多 100 MiB，传之前先看大小（照打开的那个文件看）；文件边读边发，不整个读进内存，传的时候变短了的当失败。
 //! - 认的时候 DeepSeek 先发一串换行保持连接，再发 JSON：解析前去掉开头的空白。
 //! - 状态码 200 也可能是失败：回答里有 `error` 的当失败。
 //! - 逐页认的字带着定位记号（`<｜ref｜>`、`<｜box｜>` 和坐标，[`clean()`]）：给模型看的去掉，原样的留在 `data` 里。
@@ -63,7 +63,14 @@ impl Purpose {
 /// 读不了、不是文件、是空的、超过 100 MiB（这几样没传）；连不上、DeepSeek 报错（[`DeepSeek::post`]、[`parse`]）。
 pub fn recognize(deepseek: &DeepSeek, path: &Path, purpose: Purpose) -> Result<Value, String> {
     let shown = path.display();
-    let meta = std::fs::metadata(path).map_err(|error| format!("Cannot read {shown}: {error}."))?;
+    let cannot = |error: std::io::Error| format!("Cannot read {shown}: {error}.");
+    // 先照路径看一眼：目录、管道这些不去打开（打开管道会一直等着有人写）。
+    if !std::fs::metadata(path).map_err(cannot)?.is_file() {
+        return Err(format!("{shown} is not a file."));
+    }
+    // 大小照打开的这个文件取，发的也是它：中间换了、变了的不会和说好的长度对不上。
+    let file = File::open(path).map_err(cannot)?;
+    let meta = file.metadata().map_err(cannot)?;
     if !meta.is_file() {
         return Err(format!("{shown} is not a file."));
     }
@@ -77,7 +84,6 @@ pub fn recognize(deepseek: &DeepSeek, path: &Path, purpose: Purpose) -> Result<V
             mib(size)
         ));
     }
-    let file = File::open(path).map_err(|error| format!("Cannot read {shown}: {error}."))?;
     let name = path
         .file_name()
         .map(|name| name.to_string_lossy().into_owned())
@@ -89,7 +95,7 @@ pub fn recognize(deepseek: &DeepSeek, path: &Path, purpose: Purpose) -> Result<V
     );
     let length = form.length(size);
     let reader = Cursor::new(form.head.clone())
-        .chain(file.take(size))
+        .chain(file_body(file, size))
         .chain(Cursor::new(form.tail.clone()));
     let answer = deepseek.post(
         crate::http::Api::Ocr,
@@ -100,6 +106,35 @@ pub fn recognize(deepseek: &DeepSeek, path: &Path, purpose: Purpose) -> Result<V
         },
     )?;
     parse(&answer).map_err(|why| deepseek.scrub(&why))
+}
+
+/// 文件那一段：恰好 `size` 个字节。传的时候文件变长了的只发说好的那么多；变短了的读到头报错，请求就此断掉，不让 DeepSeek
+/// 照 `Content-Length` 干等到超时。
+fn file_body<R: Read>(file: R, size: u64) -> impl Read {
+    Exactly {
+        inner: file.take(size),
+        left: size,
+    }
+}
+
+/// [`file_body`] 的读法：还差多少字节。
+struct Exactly<R> {
+    inner: std::io::Take<R>,
+    left: u64,
+}
+
+impl<R: Read> Read for Exactly<R> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let read = self.inner.read(buf)?;
+        if read == 0 && self.left > 0 && !buf.is_empty() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::UnexpectedEof,
+                "the file got shorter while it was being uploaded",
+            ));
+        }
+        self.left -= read as u64;
+        Ok(read)
+    }
 }
 
 /// 读 DeepSeek 的回答：去掉开头保持连接的换行，带 `error` 的当失败，要有 `pages`。

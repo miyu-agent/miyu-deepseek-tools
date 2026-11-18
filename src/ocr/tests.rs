@@ -81,3 +81,46 @@ fn purposes() {
     );
     assert!(Purpose::parse(&json!("layout")).is_err());
 }
+
+#[test]
+fn a_file_that_got_shorter_is_an_error_not_an_early_end() {
+    let mut read = Vec::new();
+    let got = std::io::Read::read_to_end(&mut super::file_body(&b"abc"[..], 10), &mut read);
+    assert_eq!(
+        got.map_err(|error| error.kind()),
+        Err(std::io::ErrorKind::UnexpectedEof)
+    );
+    // 一样长的照读，变长了的只读说好的那么多。
+    let mut read = Vec::new();
+    std::io::Read::read_to_end(&mut super::file_body(&b"abcdef"[..], 3), &mut read).unwrap();
+    assert_eq!(read, b"abc");
+}
+
+#[test]
+fn an_upload_shorter_than_its_length_fails_without_waiting() {
+    use crate::credentials::Credentials;
+    use crate::fake_http::{Answer, FakeDeepSeek};
+    use crate::http::{Api, Body, DeepSeek};
+    // 假服务照 Content-Length 等请求体，等 10 秒没等够才断开。
+    let server = FakeDeepSeek::start(vec![Answer::new(200, "application/json", "{}")]);
+    let deepseek = DeepSeek::new(Credentials {
+        key: "sk-test".to_string(),
+        base: server.base.clone(),
+    });
+    let start = std::time::Instant::now();
+    let got = deepseek.post(
+        Api::Ocr,
+        "application/octet-stream",
+        Body::Stream {
+            reader: Box::new(super::file_body(&b"abc"[..], 10)),
+            length: 10,
+        },
+    );
+    assert!(got.is_err(), "{got:?}");
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "waited {:?}",
+        start.elapsed()
+    );
+    assert!(server.received().is_empty());
+}

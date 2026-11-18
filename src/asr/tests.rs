@@ -91,3 +91,27 @@ fn pieces_join_with_spaces_only_between_spaced_scripts() {
     assert_eq!(join(&texts(&["Привет", "мир"])), "Привет мир");
     assert_eq!(join(&texts(&[])), "");
 }
+
+/// `fmt ` 块：16 位 PCM 的那 16 个字节后面补零，补到 `len` 个字节。
+fn padded_fmt(len: usize) -> Vec<u8> {
+    let mut fmt = pcm_fmt(1, 16_000);
+    fmt.resize(len, 0);
+    fmt
+}
+
+#[test]
+fn a_format_block_too_big_for_a_piece_is_refused() {
+    for len in [PIECE_BYTES, PIECE_BYTES - 44, PIECE_BYTES - 45] {
+        let audio = encode(&padded_fmt(len), &[1, 2, 3, 4]);
+        let got = pieces(&audio);
+        assert!(
+            got.as_ref().is_err_and(|why| why.contains("format block")),
+            "fmt {len}: {got:?}"
+        );
+    }
+    // 还放得下整帧的：照常切，每段不超过 8 MiB。
+    let audio = encode(&padded_fmt(PIECE_BYTES - 46), &[1, 2, 3, 4]);
+    let got = pieces(&audio).unwrap();
+    assert_eq!(got.len(), 2);
+    assert!(got.iter().all(|piece| piece.bytes.len() <= PIECE_BYTES));
+}

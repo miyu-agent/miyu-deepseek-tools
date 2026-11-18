@@ -31,6 +31,10 @@ pub const BALANCE_TOOL: &str = "deepseek_balance";
 
 const DESCRIPTION: &str = "Recognize the text in a PDF, Word (DOC, DOCX), PowerPoint (PPT, PPTX) or image file with DeepSeek OCR. The file is uploaded to DeepSeek, which bills per page. Returns the text page by page.";
 
+/// 别的包调方法 `ocr` 时回的。
+const OCR_PEOPLE_ONLY: &str =
+    "The ocr method is only for people at the command line; other packages cannot call it.";
+
 /// 没有 key 时工具回的。
 pub const NO_KEY: &str = "No DeepSeek key yet, so the file was not uploaded.";
 
@@ -124,11 +128,17 @@ impl Service {
                 .later(),
             move |params, _, core| service.transcribe(params, core),
         );
-        // 下面两个只给自己的命令行（`miyu deepseek-tools`）经 package.call 调，不上总线。
+        // 下面两个只给自己的命令行（`miyu deepseek-tools`）经 package.call 调，不上总线。`ocr` 会把文件传出去，只给人：
+        // 别的包调的（核心转来时带着 `from`，调的包的编号）一律拒，清单的 `[export]` 也不列它。
         let service = Arc::clone(self);
         ext.method_with(
             Method::new("ocr").timeout_ms(200_000),
-            move |params, _, core| service.ocr_method(params, core),
+            move |params, from, core| {
+                if from.is_some() {
+                    return Err(MethodError::new("not_allowed", OCR_PEOPLE_ONLY));
+                }
+                service.ocr_method(params, core)
+            },
         );
         let service = Arc::clone(self);
         ext.method_with(
