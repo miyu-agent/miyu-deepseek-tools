@@ -18,7 +18,7 @@ icon = "sparkles"
 [command]
 name = "deepseek-tools"
 program = "miyu-deepseek-tools"
-about = { en = "DeepSeek Toolkit: check whether the key is set, and recognize the text in a file", zh = "DeepSeek 功能全家桶：查看 key 是否已经设置，识别一个文件里的文字" }
+about = { en = "DeepSeek Toolkit: check whether the key is set, and recognize the text in a file", zh = "DeepSeek 功能全家桶：查看密钥是否已经设置，识别一个文件里的文字" }
 
 [process]
 args = ["serve"]
