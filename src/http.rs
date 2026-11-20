@@ -63,7 +63,8 @@ impl Api {
             (Api::Tts, 400) => "no readable text, or the text did not pass content review",
             (Api::Asr, 400) => "the audio is not 16-bit PCM WAV or Ogg Opus",
             (Api::Ocr, 400) => "the form or purpose is invalid, or the file cannot be processed",
-            (Api::Ocr, 402) => "the DeepSeek balance is too low",
+            // 余额用完对每个接口都是 402（DeepSeek 错误码文档）：原来只写了 OCR，合成、识别报「an unexpected answer」（DS-10）。
+            (_, 402) => "the DeepSeek balance is too low",
             (Api::Asr, 408) => "the upload took longer than 10 minutes",
             (Api::Ocr, 408) => "the upload was too slow",
             (Api::Asr, 413) => "the audio file is larger than 8 MiB",

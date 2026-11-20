@@ -19,6 +19,18 @@ fn status_codes_become_short_english_with_deepseek_s_own_words() {
         failure(Api::Ocr, 402, b"Insufficient Balance")
             .ends_with("(402: the DeepSeek balance is too low): Insufficient Balance")
     );
+    // 余额用完对每个接口都是 402（DeepSeek 错误码文档，2026-11-20 查）：合成、识别以前写成「an unexpected answer」。
+    for api in [Api::Tts, Api::Asr, Api::Balance] {
+        assert!(
+            failure(
+                api,
+                402,
+                br#"{"error": {"message": "Insufficient Balance"}}"#
+            )
+            .ends_with("(402: the DeepSeek balance is too low): Insufficient Balance"),
+            "{api:?}"
+        );
+    }
     assert!(failure(Api::Ocr, 504, b"").contains("the upload and submission took too long"));
     assert!(failure(Api::Asr, 408, b"").contains("10 minutes"));
     assert!(failure(Api::Tts, 504, b"").contains("synthesis timed out"));
