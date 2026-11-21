@@ -3,7 +3,7 @@
 # 它还把 DeepSeek 的语音合成和语音识别接进总线（tts.engine、stt.engine），朗读和语音输入在设置里选中它之后就会使用。
 
 [package]
-version = "0.1.0"
+version = "0.1.1"
 # 这个包带有本机程序，所以每种系统各打一个包文件（见 .github/workflows/release.yml）。
 targets = ["linux-x86_64", "macos-aarch64", "windows-x86_64"]
 protocol = [1, 1]
